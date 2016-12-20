@@ -8,8 +8,8 @@ var endpoint = process.env.ENDPOINT;
 var excludedIndices = (process.env.EXCLUDED_INDICES || '.kibana').split(/[ ,]/);
 var indexDate = moment.utc().subtract(+(process.env.MAX_INDEX_AGE || 14), 'days');
 var logLevel = process.env.LOG_LEVEL || 'info';
-var batchSize = parseInt(process.env.BATCH_SIZE) || 10
-var timeout = process.env.ES_TIMEOUT
+var batchSize = parseInt(process.env.BATCH_SIZE) || 10;
+var timeout = process.env.ES_TIMEOUT;
 
 if (awsRegion !== undefined) {
   var AWS = require('aws-sdk');
@@ -59,16 +59,16 @@ function filterIndices(indices) {
 function deleteIndices(client) {
   return function(indices) {
     if (indices.length > 0) {
-      promises = []
+      promises = [];
       for (i = 0; i < indices.length; i += batchSize) {
         promises.push(client.indices.delete({
-          index:indices.slice(i, i + batchSize)
+          index:indices.slice(i, i + batchSize);
         }))
       }
 
       return Promise.all(promises).then(function(succeeded) {
-        return indices
-      })
+        return indices;
+      });
     } else {
       return indices;
     }
