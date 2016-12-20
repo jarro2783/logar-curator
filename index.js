@@ -59,12 +59,9 @@ function filterIndices(indices) {
 function deleteIndices(client) {
   return function(indices) {
     if (indices.length > 0) {
-      promises = [];
-      for (i = 0; i < indices.length; i += batchSize) {
-        promises.push(client.indices.delete({
-          index:indices.slice(i, i + batchSize);
-        }))
-      }
+      promises = _.map(_.chunk(indices, batchSize), function (chunk) {
+        return client.indices.delete({ index: chunk });
+      });
 
       return Promise.all(promises).then(function(succeeded) {
         return indices;
