@@ -8,6 +8,7 @@ var endpoint = process.env.ENDPOINT;
 var excludedIndices = (process.env.EXCLUDED_INDICES || '.kibana').split(/[ ,]/);
 var indexDate = moment.utc().subtract(+(process.env.MAX_INDEX_AGE || 14), 'days');
 var logLevel = process.env.LOG_LEVEL || 'info';
+var deleteSize = "DELETE_SIZE" in process.env ? process.env.DELETE_SIZE : 10
 
 if (awsRegion !== undefined) {
   var AWS = require('aws-sdk');
@@ -18,6 +19,7 @@ exports.handler = function(event, context, callback) {
     apiVersion: apiVersion,
     host: endpoint,
     log: logLevel,
+    requestTimeout: 120000,
   };
 
   if (awsRegion !== undefined) {
@@ -56,9 +58,16 @@ function filterIndices(indices) {
 function deleteIndices(client) {
   return function(indices) {
     if (indices.length > 0) {
-      return client.indices.delete({index: indices}).then(function() {
-        return indices;
-      });
+      promises = []
+      for (i = 0; i < indices.length; i += deleteSize) {
+        promises.push(client.indices.delete({
+          index:indices.slice(i, i + deleteSize)
+        }))
+      }
+
+      return Promise.all(promises).then(function(succeeded) {
+        return indices
+      })
     } else {
       return indices;
     }
